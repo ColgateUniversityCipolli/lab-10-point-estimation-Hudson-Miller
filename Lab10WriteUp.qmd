@@ -218,7 +218,7 @@ geom_linerange(data = ggdat |> filter(x==2),
 aes(x = x, ymin = 0, ymax = PMF05)) +
 geom_hline(yintercept = 0) +
 scale_x_continuous("P of Winning n games",
-breaks = seq(0, 6, 1)) +
+breaks = seq(0, 11, 1)) +
 ylab("Probability") +
 theme_bw()+
 ggtitle("Theta = 0.5")
@@ -230,7 +230,7 @@ geom_linerange(data = ggdat |> filter(x==2),
 aes(x = x, ymin = 0, ymax = PMF01)) +
 geom_hline(yintercept = 0) +
 scale_x_continuous("P of Winning n games",
-breaks = seq(0, 6, 1)) +
+breaks = seq(0, 11, 1)) +
 ylab("Probability") +
 theme_bw()+
 ggtitle("Theta = 1")
@@ -241,7 +241,7 @@ geom_linerange(data = ggdat |> filter(x==2),
 aes(x = x, ymin = 0, ymax = PMF15)) +
 geom_hline(yintercept = 0) +
 scale_x_continuous("P of Winning n games",
-breaks = seq(0, 6, 1)) +
+breaks = seq(0, 11, 1)) +
 ylab("Probability") +
 theme_bw()+
 ggtitle("Theta = 1")
@@ -259,6 +259,10 @@ PMF05.plot + PMF01.plot + PMF15.plot
 ## Part c
 What is your best assessment of what $\theta$ is doing in this setting. Consider when a 6-0 blowout is most likely, and when a 5-6 nail-biter is most likely. Note here we should treat the match as a fixed $n=11$ as we did for $n=3$ in Lab 8.\
 **Note:** In lab 8, we saw that small $\theta$ meant wins came in bunches (clumped together), so there were more 2-0 wins in a best of three series.
+
+**Solution**
+
+
 
 # Question 2
 
