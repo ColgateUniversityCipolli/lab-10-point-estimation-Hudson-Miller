@@ -366,7 +366,59 @@ In `pdc2024.csv`, I have provided the data for the 2024 Premier League season. T
 
 Summarize the data. What do the data tell us about the breakdown of the results?
 
+**Solution**
 
+```{r}
+# data cleaning:
+
+dat.pdc = read_csv("pdc2024.csv")
+dat.pdc = tibble(dat.pdc) |>
+  filter(Score != "w/o") |>
+  filter(Night !=  "Finals") |>
+  mutate(Matchnum = row_number()) |>
+  separate(Score, into = c("WinnerLegs", "LoserLegs"), sep = "-", convert = TRUE)
+
+```
+
+
+```{r}
+# dat.pdc = read_csv("pdc2024.csv")
+# dat.pdc = tibble(dat.pdc) |>
+#   filter(Score != "w/o") |>
+#   filter(Night !=  "Finals") |>
+#   mutate(Matchnum = row_number()) |>
+#   separate(Score, into = c("WinnerLegs", "LoserLegs"), sep = "-", convert = TRUE) |>
+#   group_by(Winner) |>
+#   arrange(Matchnum, .by_group = TRUE) |>
+#   mutate(LegsWon = cumsum(WinnerLegs)) |>
+#   ungroup() |>
+#   arrange(Matchnum)
+
+
+
+# dat.pdc = read_csv("pdc2024.csv")
+
+# # function()
+# dat.pdc = tibble(dat.pdc) |>
+#   filter(Score != "w/o") |>
+#   filter(Night !=  "Finals") |>
+#   separate(Score, into = c("WinnerLegs", "LoserLegs"), sep = "-", convert = TRUE)
+
+# Legstat = function(player){
+#   dat.pdc = dat.pdc |>
+#   mutate(LegsWonLittler = LoserLegs * (Loser == Player)+ 6*(Winner == Player)) |>
+# }
+# # sapply(unique(players), dat.pdc)
+
+
+
+
+
+
+
+  
+
+```
 
 
 
