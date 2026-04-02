@@ -282,7 +282,15 @@ Exk = function(k, size, prob, theta){
   return(sum(x^k*fx))
 }
 
-Exk(2, 11, 0.5, 1)
+Exk(1, 11, 0.5, 1)
+
+n = 11
+p = 0.5
+
+(n*p)
+
+# Our expected value of the altham binomial matches that of the binomial for theta = 1. 
+# This makes sense, as the Altham distribution for theta = 1 is the binomial distribution.
 
 ```
 
@@ -291,7 +299,7 @@ Describe how you can use your answer to part a to find Method of Moments estimat
 
 **Solution**
 
-From a dataset, we can 
+From a dataset, we can obtain a first and second moment. We set the formula for the $1st$ moment (which is a function that takes arguments theta and p) equal to our observed value from the dataset. We do the same for the second moment. We now have two equations and two unknowns, and can use row reduction to solve for the two unknowns.
 
 ## Part c
 Write a function that computes the log-likelihood for Altham's Multiplicative Binomial Distribution, given data (`x`) and proposed parameter values $p$ (`prob`) and $\theta$ (`theta`).
