@@ -35,19 +35,25 @@ format-links: [pdf]
 ```{r}
 #| echo: false
 
-default_chunk_hook  <- knitr::knit_hooks$get("chunk")
+default_chunk_hook <- knitr::knit_hooks$get("chunk")
 
-latex_font_size <- c("Huge", "huge", "LARGE", "Large", 
-                     "large", "normalsize", "small", 
-                     "footnotesize", "scriptsize", "tiny")
+latex_font_size <- c(
+  "Huge",
+  "huge",
+  "LARGE",
+  "Large",
+  "large",
+  "normalsize",
+  "small",
+  "footnotesize",
+  "scriptsize",
+  "tiny"
+)
 
 knitr::knit_hooks$set(chunk = function(x, options) {
   x <- default_chunk_hook(x, options)
-  if(options$size %in% latex_font_size) {
-    paste0("\n \\", options$size, "\n\n", 
-      x, 
-      "\n\n \\normalsize"
-    )
+  if (options$size %in% latex_font_size) {
+    paste0("\n \\", options$size, "\n\n", x, "\n\n \\normalsize")
   } else {
     x
   }
@@ -81,16 +87,20 @@ $$c = \sum_{i=0}^n {n \choose i} p^i (1-p)^{n-i} \theta^{i(n-i)}.$$
 Just so we start on the same page, I have included my `R` function for computing probability using this distribution.
 
 ```{r}
-daltbinom <- function(x, size, prob, theta){
+daltbinom <- function(x, size, prob, theta) {
   normalizing.constant <- 0
-  for(j in 0:size){
-    normalizing.constant <- normalizing.constant + 
-      choose(size, j) * prob^j * (1-prob)^(size-j) * theta^(j*(size-j))
+  for (j in 0:size) {
+    normalizing.constant <- normalizing.constant +
+      choose(size, j) * prob^j * (1 - prob)^(size - j) * theta^(j * (size - j))
   }
   # Probability Mass at x=x
-  (1/normalizing.constant) *
-    choose(size, x) * prob^x * (1-prob)^(size-x) * theta^(x*(size-x)) *
-      (x>=0)*(x<=size)
+  (1 / normalizing.constant) *
+    choose(size, x) *
+    prob^x *
+    (1 - prob)^(size - x) *
+    theta^(x * (size - x)) *
+    (x >= 0) *
+    (x <= size)
 }
 ```
 
@@ -100,30 +110,43 @@ $$f_X(x) = \left[\int_{0}^1 \left(\frac{1}{c} {n \choose x} p^x (1-p)^{n-x} \the
 
 Just so we start on the same page, I have included my `R` function for computing probability using this distribution.
 ```{r}
-daltbbinom.single <- function(x, size, alpha, beta, theta){
-    integrand <- function(p) {
-    sapply(p, # integrate will pass in a vector, so we use sapply to apply the following
-           function(p_val){
-             # f(x|p) * f(p|alpha, beta)
-             daltbinom(x, size, p_val, theta) * dbeta(p_val, alpha, beta)
-           }
+daltbbinom.single <- function(x, size, alpha, beta, theta) {
+  integrand <- function(p) {
+    sapply(
+      p, # integrate will pass in a vector, so we use sapply to apply the following
+      function(p_val) {
+        # f(x|p) * f(p|alpha, beta)
+        daltbinom(x, size, p_val, theta) * dbeta(p_val, alpha, beta)
+      }
     )
   }
   # Probability Mass at x=x
   # integrate(integrand, lower = 0, upper = 1)$value * (x>=0)*(x<=size)
   # I shrink the bounds below to avoid log(0)=-infinty
   # I use try() to catch when there is an error and avoid crashing
-  res <- try(integrate(integrand, lower = 1e-7, upper = 1 - 1e-7)$value * 
-                  (x>=0)*(x<=size), 
-             silent = TRUE)
+  res <- try(
+    integrate(integrand, lower = 1e-7, upper = 1 - 1e-7)$value *
+      (x >= 0) *
+      (x <= size),
+    silent = TRUE
+  )
   # If there is an error, return a near-zero probability
-  if(inherits(res, "try-error")) return(0.1^6)
-  
+  if (inherits(res, "try-error")) {
+    return(0.1^6)
+  }
+
   res
 }
 # Write a function that works on a vector
-daltbbinom <- function(x, size, alpha, beta, theta){
-  sapply(X=x, FUN=daltbbinom.single, size=size, alpha=alpha, beta=beta, theta=theta)
+daltbbinom <- function(x, size, alpha, beta, theta) {
+  sapply(
+    X = x,
+    FUN = daltbbinom.single,
+    size = size,
+    alpha = alpha,
+    beta = beta,
+    theta = theta
+  )
 }
 ```
 
@@ -136,8 +159,50 @@ To help us think about the interpretation, something that was challenging before
 ## Part a
 Suppose a player has a 50\% chance of winning a specific leg, that is let $p=0.50$. Let's look at the probability they win ($x=6$) legs in the match. Compute this probability over a sequence from $\theta=0.5$ to $\theta=1.5$ and plot it using a line where the $x$-axis is $\theta$ and the $y$-axis is $P(X=6)$.
 
+**Solution**
+
+```{r}
+
+# Create the vector of probabilities for each theta. We use a function to essentially "vectorize" the daltbinom function (now I am wondering if it was already vectorized for theta).
+
+prob = function(t) {
+  daltbinom(x = 6, size = 11, prob = 0.5, theta = t)
+}
+
+
+thetas = seq(from = 0.5, to = 1.5, by = 0.05 )
+
+probs = sapply(thetas, prob)
+data = tibble(thetas,probs)
+
+```
+
+
+
+```{r}
+#Plot the probability vs theta
+
+ggplot(data) + # Specify Data
+geom_point(aes(x = thetas, # Specify x-axis
+y = probs)) + # Specify y-axis
+geom_smooth(aes(x = thetas, # Specify x-axis
+y = probs), # Specify y-axis
+method = "lm", # Specify best fit line
+color = "black") + # Specify line color
+theme_bw() + # A cleaner theme
+labs(x = "Theta", # Specify axis labels
+y = "Probability of winning 6/11 games") +
+ggtitle("Probability of Winning in Dalton Binomial Distribution") # Plot title
+```
+
+
 ## Part b
 Now, plot Altham's Multiplicative Binomial Distribution under the same parameters with $\theta=0.50$, $\theta=1$, and $\theta=1.5$. Use `ncol=1` in `facet_wrap()` to plot the PMFs in a single column for comparing.
+
+```{r}
+
+
+```
 
 ## Part c
 What is your best assessment of what $\theta$ is doing in this setting. Consider when a 6-0 blowout is most likely, and when a 5-6 nail-biter is most likely. Note here we should treat the match as a fixed $n=11$ as we did for $n=3$ in Lab 8.\
