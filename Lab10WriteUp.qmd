@@ -200,6 +200,7 @@ ggtitle("Probability of Winning in Dalton Binomial Distribution") # Plot title
 Now, plot Altham's Multiplicative Binomial Distribution under the same parameters with $\theta=0.50$, $\theta=1$, and $\theta=1.5$. Use `ncol=1` in `facet_wrap()` to plot the PMFs in a single column for comparing.
 
 ```{r}
+#| fig-height: 10
 
 ggdat <- tibble(x = (0:11)) |>
   mutate(PMF05 = daltbinom(x = x, size = 11, prob = 0.5, theta = 0.5)) 
@@ -246,12 +247,7 @@ ylab("Probability") +
 theme_bw()+
 ggtitle("Theta = 1")
 
-PMF05.plot + PMF01.plot + PMF15.plot
-
-
-
-
-
+PMF05.plot / PMF01.plot / PMF15.plot
 
 
 ```
@@ -262,15 +258,40 @@ What is your best assessment of what $\theta$ is doing in this setting. Consider
 
 **Solution**
 
-
+Here, we can see that theta is essentially a measure of how extreme the values will be in a distribution. A low theta ($<1$) corresponds to an expectation of extreme outcomes, and a high theta ($>1$) corrresponds to an expectation of moederate values. Here, this is interpreted as us expecting a close match, with both players winning a similar amount of games, when theta is low. Similarly, we expect blowouts when theta is high. When theta is moderate, we expect close-ish games, but accept that there will be some blowouts. I think that theta $\approx 1$ is the most appropriate for this situation.
 
 # Question 2
 
 ## Part a
 Altham's Multiplicative Binomial Distribution does not typically simplify to the clean $E(X)=np$ seen in the Binomial distribution, unless $\theta = 1$. Write out the expression that would need to be solved to find $E(X^k)$, and then write a function that computes it given the proposed parameter values $p$ (`prob`) and $\theta$ (`theta`).
 
+**Solution**
+
+We have the formula for the $k^{th}$ moment:
+$$
+E(X) = \sum_{x= -\infty}^{\infty}xf_x(x)
+$$
+
+which we can compute here:
+
+```{r}
+
+Exk = function(k, size, prob, theta){
+  x = 0:size
+  fx = daltbinom(x = x, size = size, prob = prob, theta = theta)
+  return(sum(x^k*fx))
+}
+
+Exk(2, 11, 0.5, 1)
+
+```
+
 ## Part b
 Describe how you can use your answer to part a to find Method of Moments estimates for the parameters $p$ and $\theta$ for Altham's Multiplicative Binomial Distribution based on data.
+
+**Solution**
+
+From a dataset, we can 
 
 ## Part c
 Write a function that computes the log-likelihood for Altham's Multiplicative Binomial Distribution, given data (`x`) and proposed parameter values $p$ (`prob`) and $\theta$ (`theta`).
