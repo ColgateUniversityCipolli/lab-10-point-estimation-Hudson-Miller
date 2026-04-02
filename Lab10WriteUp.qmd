@@ -265,7 +265,8 @@ Altham's Multiplicative Binomial Distribution does not typically simplify to the
 
 **Solution**
 
-We have the formula for the $k^{th}$ moment: $$
+We have the formula for the $k^{th}$ moment: 
+$$
 E(X) = \sum_{x= -\infty}^{\infty}xf_x(x)
 $$
 
@@ -313,14 +314,16 @@ Write a function that computes the log-likelihood for Altham's Multiplicative Bi
 
 # Let's create an arbitrary x vector to test:
 
-x = c(1,1,2,4,5,6,11,4,3,5,9,8,9,3,8,4,8,3,11,10,10,10,1,1,1,2,2,4,7,9,0,0,9,7,4)
-
 
 loglik = function(x, size, p, theta){
    results = daltbinom(x = x, size = size, prob = p, theta = theta)
    lik = base::log(results)
    return(sum(lik))
   }
+
+# Example scenario
+
+x = c(1,1,2,4,5,6,11,4,3,5,9,8,9,3,8,4,8,3,11,10,10,10,1,1,1,2,2,4,7,9,0,0,9,7,4)
 
 loglik(x = x, size = 11, p = 0.5, theta = 1)
 
@@ -329,6 +332,10 @@ loglik(x = x, size = 11, p = 0.5, theta = 1)
 ## Part d
 
 Describe how you can use your answer to part c to find Maximum Likelihood estimates for the parameters $p$ and $\theta$ for Altham's Multiplicative Binomial Distribution based on data.
+
+**Solution**
+
+We would use use calculus (via the `optim` function) to optimize theta and p for the highest (least negative) value of the log-likelihood function. We could plot result this using a color gradient, as we did in class.
 
 # Lab 10
 
@@ -358,6 +365,10 @@ In `pdc2024.csv`, I have provided the data for the 2024 Premier League season. T
 -   Make two columns `WinnerLegs` and `LoserLegs` that keep track of the number of legs each player has won
 
 Summarize the data. What do the data tell us about the breakdown of the results?
+
+
+
+
 
 ## Altham's Multiplicative Binomial Distribution
 
