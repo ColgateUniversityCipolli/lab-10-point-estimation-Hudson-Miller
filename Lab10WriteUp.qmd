@@ -381,7 +381,11 @@ dat.pdc = tibble(dat.pdc) |>
 ```
 
 
+
 ```{r}
+
+# Failed attempts:
+
 # dat.pdc = read_csv("pdc2024.csv")
 # dat.pdc = tibble(dat.pdc) |>
 #   filter(Score != "w/o") |>
@@ -410,15 +414,53 @@ dat.pdc = tibble(dat.pdc) |>
 # }
 # # sapply(unique(players), dat.pdc)
 
+# dat.pdc = tibble(dat.pdc) |>
+#  filter(Winner == "Luke Littler" | Loser == "Luke Littler") |>
+#  mutate(Littler = case_when(Winner == "Luke Littler" ~ 6, Loser == "Luke Littler" ~ LoserLegs)) |>
+#  mutate(LittlerWins = cumsum(Littler))
+```
 
+```{r}
 
+dat.pdc = dat.pdc |> mutate(MatchID = row_number())
 
+cum_legs = function(player) {
+  dat.pdc |>
+    filter(Winner == player | Loser == player) |>
+    mutate(
+      LegsWon = case_when(
+        Winner == player ~ WinnerLegs,
+        Loser  == player ~ LoserLegs
+      ),
+      CumLegsWon = cumsum(LegsWon)
+    ) |>
+    select(MatchID, CumLegsWon) |>
+    rename(!!player := CumLegsWon)
+}
 
+players = unique(as.character(c(dat.pdc$Winner, dat.pdc$Loser)))
 
+cum_data = map(players, cum_legs) |> reduce(full_join, by = "MatchID")
 
-  
+dat.pdc = dat.pdc |> left_join(cum_data, by = "MatchID")
+
+dat.pdc = dat.pdc |>
+  fill(any_of(players), .direction = "down") |>
+  mutate(across(any_of(players), ~ replace_na(., 0)))
 
 ```
+
+```{r}
+dat.pdc |>
+  pivot_longer(any_of(players), names_to = "Player", values_to = "CumLegs") |>
+  filter(!is.na(CumLegs)) |>
+  ggplot(aes(x = MatchID, y = CumLegs, color = Player)) +
+  geom_line() +
+  labs(x = "Games Played", y = "Cumulative Legs Won", color = "Player") +
+  theme_minimal()
+
+```
+
 
 
 
