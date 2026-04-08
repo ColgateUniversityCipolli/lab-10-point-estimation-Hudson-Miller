@@ -474,7 +474,6 @@ From this plot, the way that the season evolved, for each player and as a league
 - After the first 30 games, there were only three leaders, two of which finished first and second. Michael van Gerwen had a short stint of domination in the early season, but faded to a mediocre finish by the end.
 
 
-
 ## Altham's Multiplicative Binomial Distribution
 
 For each player in the 2024 season, use the number of legs won in each match to compute maximium likelihood estimates for $p$ and $\theta$.\
@@ -484,6 +483,59 @@ For each player in the 2024 season, use the number of legs won in each match to 
 -   Find the MLE for the player using this data. Ensure to report $p$ and $\theta$ for each player in a nicely formatted table.\
     **Note:** In Lecture on Monday, we used transformations to restrict how `optim()` searches the parameter space. For example, here, you might consider `p <- 1/(1+exp(-par[1]))` and `theta <- exp(par[2])`.
 -   Make comments about the MLEs in the context of the standings.
+
+
+**Solution**
+
+```{r}
+
+legs = function(player) {
+  dat.pdc |>
+    filter(Winner == player | Loser == player) |>
+    mutate(
+      LegsWon = case_when(
+        Winner == player ~ WinnerLegs,
+        Loser  == player ~ LoserLegs
+      )
+    ) |>
+    select(MatchID, LegsWon) |>
+    rename(!!paste0(player, "_dist") := LegsWon)
+}
+
+legs_data = map(players, legs) |> reduce(full_join, by = "MatchID")
+
+dat.pdc = dat.pdc |> left_join(legs_data, by = "MatchID")
+```
+
+```{r}
+altham_mle = function(player) {
+  y = dat.pdc |>
+    filter(!is.na(!!sym(paste0(player, "_dist")))) |>
+    pull(!!sym(paste0(player, "_dist")))
+  
+  nll = function(par) {
+    p     = 1 / (1 + exp(-par[1]))
+    theta = exp(par[2])
+    -loglik(x = y, size = 11, p = p, theta = theta)
+  }
+  
+  fit = optim(c(0, 0), nll)
+  
+  tibble(
+    Player = player,
+    p      = 1 / (1 + exp(-fit$par[1])),
+    theta  = exp(fit$par[2])
+  )
+}
+
+mle.table = lapply(players, altham_mle) |> list_rbind()
+# applies functions and glues lists together.
+
+knitr::kable(mle.table, digits = 3)
+
+
+```
+
 
 ## Altham's Multiplicative Beta Binomial Distribution
 
