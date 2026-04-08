@@ -368,6 +368,7 @@ Summarize the data. What do the data tell us about the breakdown of the results?
 
 **Solution**
 
+
 ```{r}
 # data cleaning:
 
@@ -450,6 +451,7 @@ dat.pdc = dat.pdc |>
 
 ```
 
+
 ```{r}
 dat.pdc |>
   pivot_longer(any_of(players), names_to = "Player", values_to = "CumLegs") |>
@@ -459,8 +461,17 @@ dat.pdc |>
   labs(x = "Games Played", y = "Cumulative Legs Won", color = "Player") +
   theme_minimal()
 
+#I had to look up a lot of functions to make this plot and the data manipulation possible. If there is an easier solution I would be very interested to see it, but I tried to do it simply for a while and couldn't find anything super elegant.
+
 ```
 
+
+From this plot, the way that the season evolved, for each player and as a league, is clear. Some notable trends are:
+
+- Luke Littler's surge in the last quarter of the season
+- Peter Wright's consistently poor performance
+- The mid-season reign of Luke Humphries
+- After the first 30 games, there were only three leaders, two of which finished first and second. Michael van Gerwen had a short stint of domination in the early season, but faded to a mediocre finish by the end.
 
 
 
