@@ -501,6 +501,7 @@ legs = function(player) {
     select(MatchID, LegsWon) |>
     rename(!!paste0(player, "_dist") := LegsWon)
 }
+ #paste0 so there are no spaces, needed to distinguish these columns from cumulative columns
 
 legs_data = map(players, legs) |> reduce(full_join, by = "MatchID")
 
@@ -528,13 +529,22 @@ altham_mle = function(player) {
   )
 }
 
-mle.table = lapply(players, altham_mle) |> list_rbind()
-# applies functions and glues lists together.
+rank_order = tibble(
+  Player = c("Luke Littler", "Luke Humphries", "Michael van Gerwen", "Michael Smith", "Nathan Aspinall", "Rob Cross",
+  "Gerwyn Price", "Peter Wright"),
+  Rank = 1:8
+)
 
-knitr::kable(mle.table, digits = 3)
+mle_table = map(players, altham_mle) |> list_rbind() |>
+  left_join(rank_order, by = "Player") |>
+  arrange(Rank) |>
+  select(Rank, Player, p, theta)
 
-
+knitr::kable(mle_table, digits = 3,
+             caption = "MLE Estimates for Altham's Multiplicative Binomial Distribution")
 ```
+
+We get a result that corroborates what we know about distributions and darts. The table, when ranked in order of final standings, is also ranked from highest p (of winning one leg) to lowest. This means that the players with the highest probabilities of winning a leg, have won the most matches. This isn't necessarily surprising (actually, it would be cool to run an analysis to see how suprising it actually is under these conditions), but it also isn't guaranteed. We also see a (less solid) positive correlation with theta and final standings. This is interesting, and makes sense- winning more legs closer to each other means that you're not spreading out your legs won between matches, you're winning 6 instead of 5 times, for example. In theory, we could have a player who won 5 games each match, which would have broken the pattern we see here.
 
 
 ## Altham's Multiplicative Beta Binomial Distribution
