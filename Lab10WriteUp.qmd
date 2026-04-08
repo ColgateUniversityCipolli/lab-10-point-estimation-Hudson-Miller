@@ -453,6 +453,8 @@ dat.pdc = dat.pdc |>
 
 
 ```{r}
+#| label: fig-CumulativeLegs
+#| fig-cap: Cumulative Legs Won Throughout the 2024 Season by Player
 dat.pdc |>
   pivot_longer(any_of(players), names_to = "Player", values_to = "CumLegs") |>
   filter(!is.na(CumLegs)) |>
@@ -539,6 +541,10 @@ mle_table = map(players, altham_mle) |> list_rbind() |>
   left_join(rank_order, by = "Player") |>
   arrange(Rank) |>
   select(Rank, Player, p, theta)
+```
+
+```{r}
+#| label: tbl-MLEb
 
 knitr::kable(mle_table, digits = 3,
              caption = "MLE Estimates for Altham's Multiplicative Binomial Distribution")
@@ -563,6 +569,85 @@ For each player in the 2024 season, use the number of legs won in each match to 
 -   Make comments about the MLEs in the context of the standings.\
     **Note**: The players alternate who throws first in a leg has the mathematical "head start" to reach a finish before their opponent can take another turn. Players alternate who throws first with each leg.
 
+**Solution**
+
+
+```{r}
+
+llaltbb = function(par, obs, neg = F) {
+  alpha = exp(par[1])
+  beta  = exp(par[2])
+  theta = exp(par[3])
+  
+  log_probs = base::log(daltbbinom(x = 0:11, size = 11,
+                             alpha = alpha, beta = beta, theta = theta))
+  
+  ll = sum(log_probs[obs + 1])
+  ifelse(neg, -ll, ll)
+}
+
+altbb_mle = function(player) {
+  y = dat.pdc |>
+    filter(!is.na(!!sym(paste0(player, "_dist")))) |>
+    pull(!!sym(paste0(player, "_dist")))
+  
+  fit = optim(par = c(0, 0, 0),
+              fn  = llaltbb,
+              obs = y,
+              neg = T)
+  
+  alpha = exp(fit$par[1])
+  beta  = exp(fit$par[2])
+  theta = exp(fit$par[3])
+  
+  tibble(
+    Player = player,
+    alpha  = alpha,
+    beta   = beta,
+    theta  = theta,
+    Mean   = alpha / (alpha + beta),
+    SD     = sqrt((alpha * beta) / ((alpha + beta)^2 * (alpha + beta + 1)))
+  )
+}
+
+altbb_table = map(players, altbb_mle) |> list_rbind() |>
+  left_join(rank_order, by = "Player") |>
+  arrange(Rank) |>
+  select(Rank, Player, alpha, beta, theta, Mean, SD)
+```
+
+```{r}
+#| label: tbl-MLEbb
+
+knitr::kable(altbb_table, digits = 3,
+             caption = "MLE Estimates for Altham's Multiplicative Beta Binomial Distribution")
+```
+
+```{r}
+#| label: fig-AlthamBB
+#| fig-cap: Beta Distributions for Each Player in the 2024 Season
+
+altbb_table |>
+  rowwise() |>
+  mutate(x = list(seq(0.01, 0.99, by = 0.01)),
+         density = list(dbeta(seq(0.01, 0.99, by = 0.01), alpha, beta))) |>
+  unnest(c(x, density)) |>
+  ggplot(aes(x = x, y = density, color = Player)) +
+  geom_line() +
+  facet_wrap(~ paste(Rank, Player), ncol = 2, scales = "free_y") +
+  labs(x = "p", y = "Density", 
+       title = "Beta Distribution by Player") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 ## Executive Summary
 
 Summarize the work you've done here to provide a brief (200-300 word) data-driven summary of the 2024 Premier League season using your work in Lab 10. Your summary should be professional, clear, and all claims should be corroborated with statistical support.
+
+**Solution**
+
+
+The 2024 Premier League season was a season defined by storylines. The first 15 games saw a tight pack, with the leader in legs won changing several times. By week 30, we entered the peak of Michael van Gerwen's best performance, which put him firmly ahead of the rest of the field. By week 45, Humphries seperated himself from the other players, with a strong lead until week 75. From then on, Littler increased his lead almost every night, finishing with a ~25 leg margin above second place. The volatility of the standings, as seen in @fig-CumulativeLegs, makes it clear that this scenario would not be easy to predict on the player or league level. 
+
+Analyzing the MLE estimates for the Altham distributions, we can see that the probability of winning one leg was highly correlated (really, we should test this) to the final standings (@tbl-MLEb). This makes sense, performing well over cumulative legs won corresponded to a higher final standing. The theta in the non-Beta distribution also indicates that a more stable probability of winning each leg often resulted in more wins over the season (@tbl-MLEb). The Altham-Beta-Binomial MLE table shows us that most of the top players had higher standard deviations in their odds of winning a single leg than the lower-ranked players. This is interesting, as it suggests a player should work on a better average leg rather than a more consistent good performance.
+
